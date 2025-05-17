@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Summarizer</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <style>
+        :root {
+            --background: #ffffff;
+            --headline: #00214d;
+            --paragraph: #1b2d45;
+            --button: #00ebc7;
+            --button-text: #00214d;
+            --secondary: #ff5470;
+            --tertiary: #fde24f;
+            --stroke: #00214d;
+            --main: #fffffe;
+            --highlight: #00ebc7;
+            --border-radius: 12px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            color: var(--paragraph);
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+        }
+        
+        header {
+            text-align: center;
+            padding: 2rem 1rem;
+            background-color: var(--background);
+            border-bottom: 1px solid rgba(0, 33, 77, 0.1);
+        }
+        
+        h1 {
+            color: var(--headline);
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        
+        h2 {
+            color: var(--headline);
+            font-size: 1.5rem;
+            margin: 1.5rem 0 1rem;
+            font-weight: 600;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+        }
+        
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin: 2rem 0;
+            background: var(--main);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 8px 30px rgba(0, 33, 77, 0.08);
+            border: 1px solid rgba(0, 33, 77, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .input-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 33, 77, 0.12);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--headline);
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 2px solid rgba(0, 33, 77, 0.2);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--highlight);
+            box-shadow: 0 0 0 3px rgba(0, 235, 199, 0.2);
+        }
+        
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        
+        button {
+            background-color: var(--button);
+            color: var(--button-text);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 235, 199, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0, 235, 199, 0.4);
+            background-color: #00debb;
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        #loading {
+            text-align: center;
+            margin: 2rem 0;
+        }
+        
+        .loader {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(0, 235, 199, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--highlight);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in forwards;
+            opacity: 0;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-container, .error-container {
+            background: var(--main);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin-top: 2rem;
+            box-shadow: 0 8px 30px rgba(0, 33, 77, 0.08);
+            border: 1px solid rgba(0, 33, 77, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .result-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--highlight);
+        }
+        
+        .error-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--secondary);
+        }
+        
+        #summary {
+            line-height: 1.8;
+            white-space: pre-line;
+        }
+        
+        .error-container {
+            border-color: rgba(255, 84, 112, 0.3);
+        }
+        
+        #error-message {
+            color: var(--secondary);
+            font-weight: 500;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: auto;
+            padding: 2rem;
+            font-size: 0.9rem;
+            color: var(--paragraph);
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .input-container, .result-container, .error-container {
+                padding: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>YouTube Video Summarizer</h1>
+        <p>Get concise summaries of YouTube videos in seconds</p>
+    </header>
+    
+    <main class="container">
+        <div class="input-container fade-in">
+            <label for="youtube-url">Enter YouTube URL</label>
+            <input type="text" id="youtube-url" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
+            <div class="button-container">
+                <button onclick="getSummary()">Get Summary</button>
+            </div>
+        </div>
+        
+        <div id="loading" style="display: none;">
+            <div class="loader"></div>
+            <p>Generating your summary...</p>
+            <p class="small-text">This may take a minute depending on video length</p>
+        </div>
+        
+        <div id="result" class="result-container fade-in" style="display: none;">
+            <h2>Summary</h2>
+            <p id="summary"></p>
+        </div>
+
+        <div id="error" class="error-container fade-in" style="display: none;">
+            <h2>Error</h2>
+            <p id="error-message"></p>
+        </div>
+    </main>
+
+    <footer>
+        <p>CECS 429 Final Project • Created by Leila Nunez</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.querySelector('.input-container').classList.add('fade-in');
+            }, 100);
+        });
+
+        function getSummary() {
+            const youtubeUrl = document.getElementById('youtube-url').value.trim();
+            
+            if (!youtubeUrl) {
+                showError('Please enter a YouTube URL');
+                return;
+            }
+            
+            // Show loading message
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('result').style.display = 'none';
+            
+            // Make API request
+            fetch('http://localhost:5001/summarize', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ youtube_url: youtubeUrl })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Hide loading message
+                document.getElementById('loading').style.display = 'none';
+                
+                // Handle successful response
+                if (data.summary) {
+                    document.getElementById('result').style.display = 'block';
+                    document.getElementById('summary').textContent = data.summary;
+                    document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else if (data.error) {
+                    showError(data.error);
+                }
+            })
+            .catch(error => {
+                // Hide loading message
+                document.getElementById('loading').style.display = 'none';
+                
+                // Show error
+                showError('Error connecting to server: ' + error.message);
+            });
+        }
+        
+        function showError(message) {
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('error').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    </script>
+</body>
+</html> 
